@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"><br><br>
+    <title>Waste Classification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: lightgreen; /* Yellow background for the entire page */
+            color: black; /* Black text color */
+        }
+        h1 {
+            margin-top: 20px;
+            color: black; /* Black color for title */
+            font-weight: bold;
+        }
+        p {
+            font-size: 1.2em;
+            color: black; /* Black text for description */
+        }
+        form {
+            margin: 20px auto;
+            width: 300px;
+            padding: 15px;
+            border-radius: 10px;
+            background: none; /* Remove white background */
+        }
+        .upload-box {
+            border: 2px dashed black; /* Black dashed border */
+            padding: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            background: rgba(255, 255, 0, 0.3); /* Light yellow transparency */
+            color: black; /* Black text for upload box */
+        }
+        input[type="file"] {
+            display: none;
+        }
+        button {
+            background-color: #28a745; /* Green background for the button */
+            color: white; /* White text for the button */
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838; /* Darker green on hover */
+        }
+        .output {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 10px;
+            color: black; /* Black text for output */
+            background: none; /* Remove white background */
+        }
+        img {
+            max-width: 300px;
+            max-height: 300px;
+            margin-top: 20px;
+        }
+        .result {
+            font-size: 1.2em;
+            margin-top: 20px;
+            color: black; /* Black text for results */
+        }
+    </style>
+</head>
+<body>
+    <h1>Waste Classification</h1>
+    <h3><p>Upload an image to classify it as Organic, Recyclable, or Unknown.</p></h3>
+
+    <form id="upload-form" enctype="multipart/form-data">
+        <label for="file-upload" class="upload-box">
+            Click to Upload Image
+            <input type="file" id="file-upload" name="file" accept="image/*">
+        </label><br>
+        <br><br>
+        <button type="submit">Classify</button>
+    </form>
+
+    <div class="output">
+        <div id="result" class="result"></div>
+        <img id="uploaded-image" src="" alt="">
+    </div>
+
+    <script>
+        const form = document.getElementById("upload-form");
+        const fileInput = document.getElementById("file-upload");
+        const resultDiv = document.getElementById("result");
+        const uploadedImage = document.getElementById("uploaded-image");
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            if (!fileInput.files[0]) {
+                resultDiv.innerHTML = "Please upload an image.";
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            try {
+                resultDiv.innerHTML = "Processing...";
+                const response = await fetch("/predict", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (data.error) {
+                    resultDiv.innerHTML = `Error: ${data.error}`;
+                } else {
+                    resultDiv.innerHTML = `
+                        <strong>Predicted Class:</strong> ${data.predicted_class}<br>
+                        <strong>Confidence:</strong> ${data.confidence}
+                    `;
+                    uploadedImage.src = "/" + data.file_path;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = "An error occurred. Please try again.";
+            }
+        });
+    </script>
+</body>
+</html>
